@@ -389,6 +389,65 @@
     .dz-status.ok  { color: var(--green); }
     .dz-status.err { color: var(--red); }
 
+    /* ── Creative Preview ── */
+    .cr-section {
+      margin-bottom: 8px;
+      border: 1px solid var(--bdr);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .cr-header {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 10px; cursor: pointer; user-select: none;
+      background: var(--surf2);
+    }
+    .cr-header:hover { background: rgba(255,255,255,.03); }
+    .cr-type-badge {
+      font-size: 9px; font-weight: 800; text-transform: uppercase;
+      padding: 2px 6px; border-radius: 3px;
+    }
+    .cr-type-badge.html   { background: rgba(251,191,36,.18); color: var(--yellow); }
+    .cr-type-badge.image  { background: rgba(96,165,250,.18);  color: var(--blue); }
+    .cr-type-badge.native { background: rgba(167,139,250,.18); color: var(--purple); }
+    .cr-type-badge.video  { background: rgba(74,222,128,.18);  color: var(--green); }
+    .cr-dims { font-size: 9px; color: var(--muted); font-family: monospace; }
+    .cr-chevron { font-size: 9px; color: var(--muted); margin-left: auto; transition: transform .2s; }
+    .cr-chevron.open { transform: rotate(180deg); }
+
+    .cr-body { display: none; padding: 8px; background: var(--bg); }
+    .cr-body.open { display: block; }
+
+    /* HTML iframe */
+    .cr-frame-wrap { width: 100%; overflow: hidden; border-radius: 3px; background: #fff; }
+    .cr-frame { border: none; display: block; width: 100%; }
+
+    /* Image */
+    .cr-img {
+      display: block; max-width: 100%; height: auto;
+      border-radius: 3px; background: var(--surf2);
+    }
+    .cr-img-err { font-size: 11px; color: var(--red); padding: 6px 0; }
+
+    /* Native */
+    .cr-native { display: flex; gap: 10px; align-items: flex-start; }
+    .cr-native-img {
+      width: 80px; height: 80px; object-fit: cover;
+      border-radius: 4px; flex-shrink: 0; background: var(--surf2);
+    }
+    .cr-native-body { flex: 1; }
+    .cr-native-title  { font-size: 13px; font-weight: 600; color: var(--txt); margin-bottom: 4px; }
+    .cr-native-desc   { font-size: 11px; color: var(--muted); line-height: 1.4; margin-bottom: 6px; }
+    .cr-native-cta    {
+      display: inline-block; background: var(--acc); color: #fff;
+      padding: 3px 10px; border-radius: 3px; font-size: 10px; font-weight: 700;
+    }
+
+    /* Video */
+    .cr-video { width: 100%; border-radius: 3px; display: block; }
+
+    /* No creative */
+    .cr-none { font-size: 10px; color: var(--muted); padding: 2px 0; font-style: italic; }
+
     /* Toast */
     .toast { position: fixed; bottom: 18px; right: 18px; padding: 9px 14px; border-radius: 6px; font-size: 12px; z-index: 999; border: 1px solid; animation: toastIn .25s ease; pointer-events: none; }
     .toast.ok  { background: rgba(74,222,128,.1);  border-color: var(--green); color: var(--green); }
@@ -805,6 +864,7 @@
           <div class="uclid-lbl">UCLID</div>
           <div class="uclid-val" onclick="copyVal('${ad.uclid}',this)">${ad.uclid}</div>
         </div>
+        ${(()=>{ const cr=detectCreative(ad); if(!cr) return '<div class="cr-none">No creative detected</div>'; return `<div class="cr-section"><div class="cr-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.cr-chevron').classList.toggle('open')"><span class="cr-type-badge ${cr.type}">\u{1F3A8} ${cr.type.toUpperCase()}</span>${cr.width&&cr.height?`<span class="cr-dims">${cr.width}×${cr.height}</span>`:''}<span class="cr-chevron open">▼</span></div><div class="cr-body open">${renderCreativeHtml(cr)}</div></div>`; })()}
         <div class="raw-json" id="raw-${i}" onclick="this.classList.toggle('expanded')" title="Click to expand">${esc(JSON.stringify(ad, null, 2))}</div>
         <div class="ac-actions">
           <div style="flex:1;display:flex;flex-direction:column;gap:3px">
@@ -897,6 +957,60 @@
   async function fireAllImpressions() { for (let i=0;i<ads.length;i++){await fireImpression(i);await delay(80);} }
   async function fireAllClicks()      { for (let i=0;i<ads.length;i++){await fireClick(i);     await delay(80);} }
   const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  // ── Creative Detection & Rendering ──────────────────────────────────────────
+  function detectCreative(ad) {
+    for (const k of ['html','creative_html','ad_html','markup','content','banner_html','ad_markup']) {
+      if (ad[k] && typeof ad[k] === 'string') {
+        const v = ad[k].trim();
+        if (v.startsWith('<') || v.includes('<html') || v.includes('<div') || v.includes('<script'))
+          return { type: 'html', content: v, width: ad.width, height: ad.height };
+      }
+    }
+    for (const k of ['video_url','video','media_url']) {
+      if (ad[k] && typeof ad[k] === 'string' && /\.(mp4|webm|ogg)(\?|$)/i.test(ad[k]))
+        return { type: 'video', url: ad[k] };
+    }
+    for (const k of ['image_url','img_url','creative_url','banner_url','image','img','thumbnail','banner']) {
+      if (ad[k] && typeof ad[k] === 'string' && isLikelyImageUrl(ad[k]))
+        return { type: 'image', url: ad[k], width: ad.width, height: ad.height };
+    }
+    for (const [k, v] of Object.entries(ad)) {
+      if (typeof v === 'string' && k !== 'uclid' && k.toLowerCase().includes('url') && isLikelyImageUrl(v))
+        return { type: 'image', url: v };
+    }
+    const title = ad.title || ad.headline;
+    const desc  = ad.description || ad.body || ad.text;
+    if (title || desc)
+      return { type: 'native', title, description: desc,
+        imageUrl: ad.image_url || ad.img_url || ad.image || ad.thumbnail,
+        cta: ad.cta || ad.call_to_action };
+    const nested = ad.creative || ad.ad_creative;
+    if (nested && typeof nested === 'object') return detectCreative(nested);
+    return null;
+  }
+  function isLikelyImageUrl(url) {
+    if (!url || typeof url !== 'string' || !url.startsWith('http')) return false;
+    const l = url.toLowerCase();
+    return /\.(jpg|jpeg|png|gif|webp|svg|bmp|avif)(\?|#|$)/.test(l) ||
+      l.includes('/image') || l.includes('/img') || l.includes('/banner') || l.includes('/creative');
+  }
+  function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+  function renderCreativeHtml(cr) {
+    if (cr.type === 'html') {
+      const w = cr.width || 300, h = cr.height || 250;
+      return `<div class="cr-frame-wrap"><iframe srcdoc="${escAttr(cr.content)}" sandbox="allow-scripts allow-same-origin" width="${w}" height="${h}" class="cr-frame" scrolling="no"></iframe></div>`;
+    }
+    if (cr.type === 'image')
+      return `<img src="${escAttr(cr.url)}" class="cr-img" alt="Ad creative" onerror="this.outerHTML='<span class=cr-img-err>⚠ Image failed to load</span>'" />`;
+    if (cr.type === 'native') {
+      const { title, description, imageUrl, cta } = cr;
+      return `<div class="cr-native">${imageUrl?`<img src="${escAttr(imageUrl)}" class="cr-native-img" onerror="this.style.display='none'" />`:''}<div class="cr-native-body">${title?`<div class="cr-native-title">${esc(title)}</div>`:''}${description?`<div class="cr-native-desc">${esc(description)}</div>`:''}${cta?`<div class="cr-native-cta">${esc(cta)}</div>`:''}</div></div>`;
+    }
+    if (cr.type === 'video')
+      return `<video src="${escAttr(cr.url)}" class="cr-video" controls muted></video>`;
+    return '';
+  }
 
   // ── Event Flash ─────────────────────────────────────────────────────────────
   let flashTimer;
