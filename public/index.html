@@ -971,22 +971,23 @@
       if (ad[k] && typeof ad[k] === 'string' && /\.(mp4|webm|ogg)(\?|$)/i.test(ad[k]))
         return { type: 'video', url: ad[k] };
     }
-    for (const k of ['image_url','img_url','creative_url','banner_url','image','img','thumbnail','banner']) {
+    for (const k of ['image_url','img_url','creative_url','banner_url','imageMain','image_main',
+                     'image','img','thumbnail','banner','cover','photo']) {
       if (ad[k] && typeof ad[k] === 'string' && isLikelyImageUrl(ad[k]))
         return { type: 'image', url: ad[k], width: ad.width, height: ad.height };
     }
     for (const [k, v] of Object.entries(ad)) {
-      if (typeof v === 'string' && k !== 'uclid' && k.toLowerCase().includes('url') && isLikelyImageUrl(v))
+      if (typeof v === 'string' && k !== 'uclid' && isLikelyImageUrl(v))
         return { type: 'image', url: v };
     }
     const title = ad.title || ad.headline;
     const desc  = ad.description || ad.body || ad.text;
     if (title || desc)
       return { type: 'native', title, description: desc,
-        imageUrl: ad.image_url || ad.img_url || ad.image || ad.thumbnail,
+        imageUrl: ad.image_url || ad.img_url || ad.imageMain || ad.image || ad.thumbnail,
         cta: ad.cta || ad.call_to_action };
-    const nested = ad.creative || ad.ad_creative;
-    if (nested && typeof nested === 'object') return detectCreative(nested);
+    const nested = ad.creative || ad.ad_creative || ad.elements;
+    if (nested && typeof nested === 'object' && !Array.isArray(nested)) return detectCreative(nested);
     return null;
   }
   function isLikelyImageUrl(url) {
