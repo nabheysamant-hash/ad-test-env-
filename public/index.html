@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ad Test Environment | Osmos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #0d0f1a;
+      --surf:   #13162a;
+      --surf2:  #1c2040;
+      --bdr:    #252a4a;
+      --txt:    #e2e8f0;
+      --muted:  #7a85a8;
+      --acc:    #6c63ff;
+      --acch:   #7e77ff;
+      --green:  #4ade80;
+      --red:    #f87171;
+      --yellow: #fbbf24;
+      --blue:   #60a5fa;
+      --purple: #a78bfa;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surf);
+      border-bottom: 1px solid var(--bdr);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-size: 16px; font-weight: 800; letter-spacing: 2px;
+      background: linear-gradient(135deg, #6c63ff, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .tag {
+      background: var(--surf2); border: 1px solid var(--bdr);
+      padding: 2px 8px; border-radius: 4px; font-size: 11px; color: var(--muted);
+    }
+
+    /* ── Session Bar ── */
+    .session-bar {
+      background: var(--surf);
+      border-bottom: 2px solid var(--bdr);
+      padding: 7px 20px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+    .sb-sep { width: 1px; height: 22px; background: var(--bdr); margin: 0 14px; }
+    .sb-field { display: flex; align-items: center; gap: 8px; }
+    .sb-label {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); white-space: nowrap;
+    }
+    .sb-val { font-family: monospace; font-size: 12px; color: var(--txt); }
+
+    /* UBID section */
+    .sb-ubid-wrap { display: flex; align-items: center; gap: 8px; }
+    .sb-ubid-label {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; white-space: nowrap;
+    }
+    .sb-ubid-label.has-val  { color: var(--muted); }
+    .sb-ubid-label.no-val   { color: var(--red); }
+    #sb-ubid {
+      background: var(--surf2);
+      border: 1px solid var(--bdr);
+      color: var(--txt);
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      outline: none;
+      width: 200px;
+      transition: border-color .15s;
+    }
+    #sb-ubid:focus { border-color: var(--acc); }
+    #sb-ubid.warn  { border-color: var(--red) !important; animation: shake .4s ease; }
+    #sb-ubid.ok-flash { border-color: var(--green); }
+    @keyframes shake {
+      0%,100%{ transform:translateX(0); }
+      20%    { transform:translateX(-6px); }
+      40%    { transform:translateX(6px); }
+      60%    { transform:translateX(-4px); }
+      80%    { transform:translateX(4px); }
+    }
+    .sb-ubid-hint { font-size: 10px; color: var(--red); font-style: italic; }
+    .sb-ubid-hint.hidden { display: none; }
+
+    /* ── Layout ── */
+    .main { display: grid; grid-template-columns: 310px 1fr 380px; flex: 1; overflow: hidden; }
+    .panel { border-right: 1px solid var(--bdr); display: flex; flex-direction: column; overflow: hidden; }
+    .panel:last-child { border-right: none; }
+    .ph {
+      padding: 10px 14px; border-bottom: 1px solid var(--bdr);
+      font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--muted); background: var(--surf);
+      flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+    }
+    .pb { flex: 1; overflow-y: auto; padding: 14px; }
+    .pb::-webkit-scrollbar { width: 5px; }
+    .pb::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 3px; }
+
+    /* ── Form ── */
+    .field { margin-bottom: 10px; }
+    label {
+      display: block; font-size: 10px; color: var(--muted); margin-bottom: 3px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
+    }
+    label .req { color: var(--red); }
+    input[type=text], input[type=number], select {
+      width: 100%; background: var(--surf2); border: 1px solid var(--bdr);
+      color: var(--txt); padding: 7px 10px; border-radius: 5px;
+      font-size: 12px; font-family: 'Courier New', monospace; outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus { border-color: var(--acc); }
+    select option { background: var(--surf2); }
+    .au-list { display: flex; flex-direction: column; gap: 5px; }
+    .au-row  { display: flex; gap: 5px; }
+    .au-row input { flex: 1; }
+    .icon-btn {
+      width: 30px; height: 30px; background: var(--surf2); border: 1px solid var(--bdr);
+      color: var(--muted); border-radius: 5px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0; transition: all .15s;
+    }
+    .icon-btn:hover { border-color: var(--acc); color: var(--acc); }
+    .add-btn {
+      width: 100%; background: transparent; border: 1px dashed var(--bdr);
+      color: var(--muted); padding: 5px; border-radius: 5px;
+      cursor: pointer; font-size: 11px; margin-top: 5px; transition: all .15s;
+    }
+    .add-btn:hover { border-color: var(--acc); color: var(--acc); }
+    hr { border: none; border-top: 1px solid var(--bdr); margin: 10px 0; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+    .toggle-row span { font-size: 12px; color: var(--muted); }
+    .sw { position: relative; width: 34px; height: 18px; }
+    .sw input { display: none; }
+    .sw-slider {
+      position: absolute; inset: 0; background: var(--surf2); border: 1px solid var(--bdr);
+      border-radius: 9px; cursor: pointer; transition: .2s;
+    }
+    .sw-slider::before {
+      content: ''; position: absolute; left: 2px; top: 50%; transform: translateY(-50%);
+      width: 12px; height: 12px; background: var(--muted); border-radius: 50%; transition: .2s;
+    }
+    .sw input:checked + .sw-slider { background: var(--acc); border-color: var(--acc); }
+    .sw input:checked + .sw-slider::before { left: 18px; background: #fff; }
+    .fire-btn {
+      width: 100%; background: var(--acc); border: none; color: #fff;
+      padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 8px; transition: background .15s; margin-top: 4px;
+    }
+    .fire-btn:hover { background: var(--acch); }
+    .fire-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .spin {
+      width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff; border-radius: 50%; animation: spin .5s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Ad Cards ── */
+    .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--muted); text-align: center; gap: 8px; }
+    .empty .ico { font-size: 36px; opacity: .3; }
+    .empty p { font-size: 12px; }
+
+    .batch-row { display: flex; gap: 7px; margin-bottom: 12px; }
+    .batch-btn {
+      flex: 1; padding: 7px; border: 1px solid var(--bdr); background: var(--surf);
+      color: var(--muted); border-radius: 5px; font-size: 11px; font-weight: 700;
+      cursor: pointer; text-transform: uppercase; letter-spacing: .5px; transition: all .15s;
+    }
+    .batch-btn:hover { border-color: var(--acc); color: var(--acc); }
+
+    .ad-card { background: var(--surf); border: 1px solid var(--bdr); border-radius: 7px; padding: 12px; margin-bottom: 10px; }
+    .ac-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .ac-idx  { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .dots { display: flex; gap: 5px; align-items: center; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--surf2); border: 1px solid var(--bdr); transition: all .2s;
+    }
+    .dot.ok  { background: var(--green);  border-color: var(--green); }
+    .dot.err { background: var(--red);    border-color: var(--red); }
+    .dot.run { background: var(--yellow); border-color: var(--yellow); animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+    .dot-lbl { font-size: 9px; color: var(--muted); }
+
+    .uclid-wrap { margin-bottom: 8px; }
+    .uclid-lbl { font-size: 9px; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; }
+    .uclid-val {
+      background: var(--surf2); border: 1px solid var(--bdr); border-radius: 4px;
+      padding: 5px 8px; font-family: monospace; font-size: 11px; color: var(--blue);
+      word-break: break-all; cursor: pointer; transition: border-color .15s;
+    }
+    .uclid-val:hover { border-color: var(--acc); }
+
+    .raw-json {
+      background: var(--surf2); border: 1px solid var(--bdr); border-radius: 4px;
+      padding: 7px; font-family: monospace; font-size: 10px; color: var(--muted);
+      max-height: 65px; overflow: hidden; white-space: pre; overflow-x: auto;
+      margin-bottom: 8px; cursor: pointer;
+    }
+    .raw-json.expanded { max-height: 260px; overflow-y: auto; }
+
+    /* ── Event Buttons ── */
+    .ac-actions { display: flex; gap: 7px; }
+    .ac-btn {
+      flex: 1; padding: 8px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: 1px solid; display: flex; align-items: center;
+      justify-content: center; gap: 5px; transition: all .15s; position: relative; overflow: hidden;
+    }
+    .ac-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Ripple on fire */
+    @keyframes btnRipple {
+      0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.35); }
+      60%  { box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+      100% { box-shadow: none; }
+    }
+    .ac-btn.firing { animation: btnRipple .5s ease; }
+
+    .imp-btn { background: rgba(96,165,250,.1);  border-color: rgba(96,165,250,.3);  color: var(--blue); }
+    .imp-btn:not(:disabled):hover { background: rgba(96,165,250,.2); border-color: var(--blue); }
+    .imp-btn.ok  { background: rgba(74,222,128,.1); border-color: var(--green); color: var(--green); }
+    .imp-btn.err { background: rgba(248,113,113,.1); border-color: var(--red);  color: var(--red); }
+
+    .clk-btn { background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.3); color: var(--purple); }
+    .clk-btn:not(:disabled):hover { background: rgba(167,139,250,.2); border-color: var(--purple); }
+    .clk-btn.ok  { background: rgba(74,222,128,.1); border-color: var(--green); color: var(--green); }
+    .clk-btn.err { background: rgba(248,113,113,.1); border-color: var(--red);  color: var(--red); }
+
+    .btn-last-fired { font-size: 9px; color: var(--muted); margin-top: 3px; text-align: center; min-height: 12px; }
+
+    /* ── Event Flash (center overlay) ── */
+    .event-flash {
+      position: fixed;
+      top: 96px;
+      left: calc(310px + (100vw - 310px - 380px) / 2);
+      transform: translateX(-50%);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      z-index: 9999;
+      border: 1px solid;
+      display: flex; align-items: center; gap: 10px;
+      pointer-events: none;
+      animation: flashIn .2s ease;
+    }
+    .event-flash.imp { background: rgba(96,165,250,.18); border-color: var(--blue); color: var(--blue); }
+    .event-flash.clk { background: rgba(167,139,250,.18); border-color: var(--purple); color: var(--purple); }
+    .event-flash.ok  { background: rgba(74,222,128,.18); border-color: var(--green); color: var(--green); }
+    .event-flash.err { background: rgba(248,113,113,.18); border-color: var(--red); color: var(--red); }
+    .event-flash.out { animation: flashOut .3s ease forwards; }
+    @keyframes flashIn  { from{opacity:0;transform:translateX(-50%) translateY(-8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    @keyframes flashOut { to{opacity:0;transform:translateX(-50%) translateY(-8px)} }
+    .ef-uclid { font-family: monospace; font-size: 10px; opacity: .8; }
+
+    /* ── Enhanced Event Log ── */
+    .log-entry {
+      border-radius: 6px;
+      margin-bottom: 7px;
+      border: 1px solid transparent;
+      overflow: hidden;
+      animation: logSlide .2s ease;
+    }
+    @keyframes logSlide { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+
+    .log-entry.ok  { background: rgba(74,222,128,.04);  border-color: rgba(74,222,128,.18); }
+    .log-entry.err { background: rgba(248,113,113,.04); border-color: rgba(248,113,113,.18); }
+    .log-entry.run { background: rgba(251,191,36,.04);  border-color: rgba(251,191,36,.18); }
+
+    .le-head {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 10px; cursor: pointer; user-select: none;
+    }
+    .le-head:hover { background: rgba(255,255,255,.02); }
+
+    .le-badge {
+      padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 800; text-transform: uppercase;
+    }
+    .le-badge.req { background: rgba(251,191,36,.18); color: var(--yellow); }
+    .le-badge.imp { background: rgba(96,165,250,.18);  color: var(--blue); }
+    .le-badge.clk { background: rgba(167,139,250,.18); color: var(--purple); }
+
+    .le-status { font-size: 11px; font-weight: 700; }
+    .le-status.ok  { color: var(--green); }
+    .le-status.err { color: var(--red); }
+    .le-status.run { color: var(--yellow); }
+
+    .le-short { font-size: 10px; color: var(--muted); font-family: monospace; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .le-time  { font-size: 9px; color: var(--muted); opacity: .6; font-family: monospace; white-space: nowrap; }
+    .le-chevron { font-size: 9px; color: var(--muted); transition: transform .2s; }
+    .le-chevron.open { transform: rotate(180deg); }
+
+    .le-body {
+      padding: 0 10px 10px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      display: none;
+    }
+    .le-body.open { display: block; }
+
+    .le-params { margin: 8px 0; }
+    .le-param-row {
+      display: flex; gap: 8px; font-size: 11px; font-family: monospace;
+      padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.03);
+    }
+    .le-param-row:last-child { border-bottom: none; }
+    .le-pk { color: var(--muted); min-width: 90px; flex-shrink: 0; }
+    .le-pv { color: var(--txt); word-break: break-all; }
+
+    .le-url-block {
+      background: var(--surf2); border: 1px solid var(--bdr); border-radius: 4px;
+      padding: 6px 8px; margin-top: 8px; font-family: monospace; font-size: 10px;
+      color: var(--blue); word-break: break-all;
+    }
+    .le-url-actions { display: flex; justify-content: flex-end; margin-top: 5px; }
+    .le-copy-btn {
+      background: transparent; border: 1px solid var(--bdr); color: var(--muted);
+      padding: 2px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; transition: all .15s;
+    }
+    .le-copy-btn:hover { border-color: var(--acc); color: var(--acc); }
+
+    /* raw response */
+    .raw-section { margin-bottom: 10px; }
+    .raw-title   { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+    .raw-full    { background: var(--surf2); border: 1px solid var(--bdr); border-radius: 4px; padding: 10px; font-family: monospace; font-size: 10px; color: var(--txt); overflow-x: auto; white-space: pre; max-height: 220px; overflow-y: auto; }
+
+    .clear-btn { background: transparent; border: 1px solid var(--bdr); color: var(--muted); padding: 3px 9px; border-radius: 4px; cursor: pointer; font-size: 10px; transition: all .15s; }
+    .clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── URL Drop Zone ── */
+    .drop-zone {
+      background: var(--surf2);
+      border: 1.5px dashed var(--bdr);
+      border-radius: 7px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      transition: border-color .2s, background .2s;
+    }
+    .drop-zone.drag-over { border-color: var(--acc); background: rgba(108,99,255,.07); }
+    .drop-zone.parsed    { border-color: var(--green); border-style: solid; }
+    .drop-zone.parse-err { border-color: var(--red);   border-style: solid; }
+
+    .dz-label {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .6px;
+      margin-bottom: 7px; display: flex; align-items: center; gap: 6px;
+    }
+    .dz-pill {
+      background: rgba(108,99,255,.18); color: var(--acc);
+      border-radius: 3px; padding: 1px 6px; font-size: 9px; font-weight: 800;
+    }
+    .dz-row { display: flex; gap: 6px; }
+    .dz-input {
+      flex: 1; background: var(--surf); border: 1px solid var(--bdr);
+      color: var(--txt); padding: 6px 9px; border-radius: 5px;
+      font-size: 11px; font-family: 'Courier New', monospace; outline: none;
+      transition: border-color .15s;
+    }
+    .dz-input:focus { border-color: var(--acc); }
+    .dz-input::placeholder { color: var(--muted); opacity: .55; }
+    .dz-btn {
+      background: var(--acc); border: none; color: #fff;
+      padding: 6px 12px; border-radius: 5px; font-size: 11px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; transition: background .15s; flex-shrink: 0;
+    }
+    .dz-btn:hover { background: var(--acch); }
+    .dz-status { font-size: 10px; margin-top: 6px; min-height: 13px; font-family: monospace; }
+    .dz-status.ok  { color: var(--green); }
+    .dz-status.err { color: var(--red); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 18px; right: 18px; padding: 9px 14px; border-radius: 6px; font-size: 12px; z-index: 999; border: 1px solid; animation: toastIn .25s ease; pointer-events: none; }
+    .toast.ok  { background: rgba(74,222,128,.1);  border-color: var(--green); color: var(--green); }
+    .toast.err { background: rgba(248,113,113,.1); border-color: var(--red);   color: var(--red); }
+    @keyframes toastIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">OSMOS</span>
+  <span class="tag">Ad Test Environment</span>
+  <span style="flex:1"></span>
+  <span class="tag" style="color:var(--muted)">v1.2</span>
+</header>
+
+<!-- ── Session Bar ─────────────────────────────────────────────────────────── -->
+<div class="session-bar">
+  <div class="sb-field">
+    <span class="sb-label">Client ID</span>
+    <span class="sb-val" id="sb-client">—</span>
+  </div>
+  <div class="sb-sep"></div>
+
+  <div class="sb-ubid-wrap">
+    <span class="sb-ubid-label no-val" id="sb-ubid-lbl">CLI UBID ✱</span>
+    <input id="sb-ubid"
+           placeholder="Enter shopper UBID to enable events…"
+           oninput="onUbidChange(this.value)"
+           onblur="updateUbidLabel()" />
+    <span class="sb-ubid-hint hidden" id="sb-ubid-hint">Required before firing events</span>
+  </div>
+
+  <div class="sb-sep"></div>
+  <div class="sb-field">
+    <span class="sb-label">Domain</span>
+    <span class="sb-val" id="sb-domain">—</span>
+  </div>
+  <div class="sb-sep"></div>
+  <div class="sb-field">
+    <span class="sb-label">Page Type</span>
+    <span class="sb-val" id="sb-pt">—</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ── CONFIG ── -->
+  <div class="panel">
+    <div class="ph">Configuration</div>
+    <div class="pb">
+
+      <!-- URL DROP ZONE -->
+      <div class="drop-zone" id="dz"
+           ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)">
+        <div class="dz-label">
+          🔗 Drop or paste ad request URL
+          <span class="dz-pill">auto-fill</span>
+        </div>
+        <div class="dz-row">
+          <input class="dz-input" id="dz-input"
+                 placeholder="https://bfs-ba.o-s.io/v2/bsda?client_id=…&cli_ubid=…&pt=…&au[]=…"
+                 onkeydown="if(event.key==='Enter')dzParse()" />
+          <button class="dz-btn" onclick="dzParse()">Parse</button>
+        </div>
+        <div class="dz-status" id="dz-status"></div>
+      </div>
+
+      <div class="field">
+        <label>Domain <span class="req">*</span></label>
+        <input id="f_domain" type="text" value="bfs-ba.o-s.io" placeholder="e.g. bfs-ba.o-s.io"
+               oninput="updateSessionBar()" />
+      </div>
+      <div class="field">
+        <label>Client ID <span class="req">*</span></label>
+        <input id="f_client_id" type="text" value="10122461" placeholder="Retailer unique ID"
+               oninput="updateSessionBar()" />
+      </div>
+      <div class="field">
+        <label>Page Type <span class="req">*</span></label>
+        <input id="f_pt" type="text" value="bajajfinserv" placeholder="e.g. HOME"
+               oninput="updateSessionBar()" />
+      </div>
+
+      <div class="field">
+        <label>Ad Units <span class="req">*</span>  <span style="font-size:9px;text-transform:none;letter-spacing:0">(max 5)</span></label>
+        <div class="au-list" id="au-list">
+          <div class="au-row">
+            <input type="text" value="appcard_mobile" placeholder="ad unit tag" />
+            <button class="icon-btn" onclick="removeAu(this)">−</button>
+          </div>
+        </div>
+        <button class="add-btn" onclick="addAu()">+ Add Ad Unit</button>
+      </div>
+
+      <div class="field">
+        <label>Ads Per Unit <span class="req">*</span></label>
+        <input id="f_pcnt_au" type="number" value="1" min="1" max="10" />
+      </div>
+
+      <hr />
+
+      <div class="field">
+        <label>OS Name</label>
+        <select id="f_os_name">
+          <option value="">— optional —</option>
+          <option value="Android">Android</option>
+          <option value="iOS">iOS</option>
+          <option value="Desktop">Desktop</option>
+          <option value="m_web">m_web</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>OS Version</label>
+        <input id="f_os_version" type="text" placeholder="e.g. 1.0.0" />
+      </div>
+
+      <hr />
+
+      <div class="toggle-row">
+        <span>Auto-fire Impressions on load</span>
+        <label class="sw"><input type="checkbox" id="t_auto_imp" checked /><span class="sw-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span>Random number (anti-cache)</span>
+        <label class="sw"><input type="checkbox" id="t_rn" checked /><span class="sw-slider"></span></label>
+      </div>
+
+      <button class="fire-btn" id="fire-btn" onclick="fireAdRequest()">
+        <span id="fire-label">▶  Fire Ad Request</span>
+        <div class="spin" id="fire-spin"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── AD RESULTS ── -->
+  <div class="panel">
+    <div class="ph">
+      <span>Ad Results</span>
+      <span id="ad-count" style="color:var(--muted);font-size:10px;font-weight:400"></span>
+    </div>
+    <div class="pb" id="ad-results">
+      <div class="empty"><div class="ico">📡</div><p>Fire an ad request to see results here</p></div>
+    </div>
+  </div>
+
+  <!-- ── EVENT LOG ── -->
+  <div class="panel">
+    <div class="ph">
+      <span>Event Log</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="log-count" style="color:var(--muted);font-size:10px;font-weight:400"></span>
+        <button class="clear-btn" onclick="clearLog()">Clear</button>
+      </div>
+    </div>
+    <div class="pb" id="event-log">
+      <div class="empty"><div class="ico">📋</div><p>Events will appear here</p></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let ads = [];
+  let logId = 0;
+  let logs  = [];
+
+  // ── Session bar ────────────────────────────────────────────────────────────
+  function updateSessionBar() {
+    document.getElementById('sb-client').textContent = document.getElementById('f_client_id').value.trim() || '—';
+    document.getElementById('sb-domain').textContent = document.getElementById('f_domain').value.trim()    || '—';
+    document.getElementById('sb-pt').textContent     = document.getElementById('f_pt').value.trim()        || '—';
+  }
+  function onUbidChange(val) {
+    // Sync back to hidden form field for cfg() compatibility
+    document.getElementById('sb-ubid').classList.remove('warn');
+    document.getElementById('sb-ubid-hint').classList.add('hidden');
+    updateUbidLabel();
+  }
+  function updateUbidLabel() {
+    const val = document.getElementById('sb-ubid').value.trim();
+    const lbl = document.getElementById('sb-ubid-lbl');
+    lbl.textContent = val ? 'CLI UBID' : 'CLI UBID ✱';
+    lbl.className   = 'sb-ubid-label ' + (val ? 'has-val' : 'no-val');
+  }
+  function requireUbid() {
+    const inp = document.getElementById('sb-ubid');
+    if (inp.value.trim()) return true;
+    inp.classList.add('warn');
+    document.getElementById('sb-ubid-hint').classList.remove('hidden');
+    inp.focus();
+    setTimeout(() => inp.classList.remove('warn'), 500);
+    return false;
+  }
+  function getUbid() { return document.getElementById('sb-ubid').value.trim(); }
+
+  // Run on load
+  updateSessionBar();
+
+  // ── URL Drop Zone ──────────────────────────────────────────────────────────
+  function dzOver(e)  { e.preventDefault(); document.getElementById('dz').classList.add('drag-over'); }
+  function dzLeave()  { document.getElementById('dz').classList.remove('drag-over'); }
+  function dzDrop(e) {
+    e.preventDefault();
+    dzLeave();
+    const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text/uri-list');
+    if (text) { document.getElementById('dz-input').value = text.trim(); dzParse(); }
+  }
+  function dzParse() {
+    const raw = document.getElementById('dz-input').value.trim();
+    if (!raw) return;
+    const parsed = parseAdUrl(raw);
+    if (!parsed) {
+      dzStatus('Could not parse — is this a valid ad request URL?', 'err');
+      document.getElementById('dz').classList.add('parse-err');
+      setTimeout(() => document.getElementById('dz').classList.remove('parse-err'), 2000);
+      return;
+    }
+    fillForm(parsed);
+    const auList = parsed.au.length ? parsed.au.join(', ') : '—';
+    dzStatus(`✓ ${parsed.domain}  ·  client ${parsed.client_id}  ·  ubid ${parsed.cli_ubid || '(none)'}  ·  au: ${auList}`, 'ok');
+    document.getElementById('dz').classList.add('parsed');
+    setTimeout(() => document.getElementById('dz').classList.remove('parsed'), 2500);
+  }
+  function dzStatus(msg, type) {
+    const el = document.getElementById('dz-status');
+    el.textContent = msg;
+    el.className   = 'dz-status ' + type;
+  }
+
+  // ── URL Parser ─────────────────────────────────────────────────────────────
+  function parseAdUrl(raw) {
+    try {
+      let s = raw.trim();
+      // Strip shell artefacts: trailing quote, \, curl flags
+      s = s.replace(/\s*[\\'"]\s*$/, '').replace(/^[\\'"]\s*/, '');
+      if (!s.startsWith('http://') && !s.startsWith('https://')) s = 'https://' + s;
+      const u = new URL(s);
+      const p = u.searchParams;
+      // au[] can appear multiple times
+      const au = p.getAll('au[]').filter(Boolean);
+      return {
+        domain:     u.hostname,
+        client_id:  p.get('client_id')  || '',
+        cli_ubid:   p.get('cli_ubid')   || '',
+        pt:         p.get('pt')         || '',
+        pcnt_au:    p.get('pcnt_au')    || '1',
+        os_name:    p.get('os_name')    || '',
+        os_version: p.get('os_version') || '',
+        au,
+      };
+    } catch (_) { return null; }
+  }
+
+  function fillForm(p) {
+    document.getElementById('f_domain').value    = p.domain;
+    document.getElementById('f_client_id').value = p.client_id;
+    document.getElementById('f_pt').value        = p.pt;
+    document.getElementById('f_pcnt_au').value   = p.pcnt_au || 1;
+    document.getElementById('f_os_version').value= p.os_version;
+    const osEl = document.getElementById('f_os_name');
+    osEl.value = ['Android','iOS','Desktop','m_web'].includes(p.os_name) ? p.os_name : '';
+
+    // Populate CLI UBID in session bar
+    if (p.cli_ubid) {
+      document.getElementById('sb-ubid').value = p.cli_ubid;
+      updateUbidLabel();
+    }
+
+    // Rebuild ad-units list
+    const list = document.getElementById('au-list');
+    list.innerHTML = '';
+    const vals = p.au.length ? p.au : [''];
+    vals.forEach(v => {
+      const row = document.createElement('div');
+      row.className = 'au-row';
+      row.innerHTML = `<input type="text" value="${esc(v)}" placeholder="ad unit tag" />
+                       <button class="icon-btn" onclick="removeAu(this)">−</button>`;
+      list.appendChild(row);
+    });
+
+    updateSessionBar();
+  }
+
+  // Global paste: anywhere on the page (outside a form input) try to parse as ad URL
+  document.addEventListener('paste', (e) => {
+    const active = document.activeElement;
+    const inInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')
+                    && active.id !== 'dz-input';
+    if (inInput) return;
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain') || '';
+    if (text.includes('/v2/bsda') || (text.includes('o-s.io') && text.includes('client_id'))) {
+      e.preventDefault();
+      document.getElementById('dz-input').value = text.trim();
+      dzParse();
+    }
+  });
+
+  // ── AU list ────────────────────────────────────────────────────────────────
+  function addAu() {
+    const list = document.getElementById('au-list');
+    if (list.children.length >= 5) return toast('Max 5 ad units', 'err');
+    const row = document.createElement('div');
+    row.className = 'au-row';
+    row.innerHTML = `<input type="text" placeholder="ad unit tag" /><button class="icon-btn" onclick="removeAu(this)">−</button>`;
+    list.appendChild(row);
+  }
+  function removeAu(btn) {
+    if (document.getElementById('au-list').children.length <= 1) return;
+    btn.closest('.au-row').remove();
+  }
+
+  // ── Config ─────────────────────────────────────────────────────────────────
+  function cfg() {
+    const au = [...document.querySelectorAll('#au-list .au-row input')].map(i => i.value.trim()).filter(Boolean);
+    return {
+      domain:     document.getElementById('f_domain').value.trim(),
+      client_id:  document.getElementById('f_client_id').value.trim(),
+      cli_ubid:   getUbid(),
+      pt:         document.getElementById('f_pt').value.trim(),
+      au,
+      pcnt_au:    document.getElementById('f_pcnt_au').value,
+      os_name:    document.getElementById('f_os_name').value,
+      os_version: document.getElementById('f_os_version').value.trim(),
+      rn:         document.getElementById('t_rn').checked ? String(Math.floor(Math.random()*1e9)) : '',
+    };
+  }
+
+  // ── Ad Request ─────────────────────────────────────────────────────────────
+  async function fireAdRequest() {
+    const c = cfg();
+    if (!c.domain || !c.client_id || !c.au.length) return toast('Fill in required fields', 'err');
+    if (!requireUbid()) return;
+
+    setBusy(true);
+    const lid = addLog('REQ', 'run', `${c.domain}/v2/bsda`, null, { client_id: c.client_id, cli_ubid: c.cli_ubid, pt: c.pt, 'au[]': c.au.join(', '), pcnt_au: c.pcnt_au });
+
+    try {
+      const r = await fetch('/api/ad-request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c),
+      });
+      const result = await r.json();
+
+      updateLog(lid, result.success ? 'ok' : 'err', result.status, result.url);
+      ads = extractAds(result.data || {});
+      renderAds(result.data, ads);
+      document.getElementById('ad-count').textContent = ads.length ? `${ads.length} ad${ads.length > 1 ? 's' : ''}` : '';
+
+      if (result.success && document.getElementById('t_auto_imp').checked && ads.length)
+        setTimeout(fireAllImpressions, 200);
+    } catch (e) {
+      updateLog(lid, 'err', 0, null, null, e.message);
+      toast('Request failed: ' + e.message, 'err');
+    }
+    setBusy(false);
+  }
+
+  function setBusy(on) {
+    document.getElementById('fire-btn').disabled = on;
+    document.getElementById('fire-spin').style.display = on ? 'block' : 'none';
+    document.getElementById('fire-label').textContent  = on ? 'Firing…' : '▶  Fire Ad Request';
+  }
+
+  // ── Extract ads ─────────────────────────────────────────────────────────────
+  function extractAds(data) {
+    if (!data) return [];
+    if (Array.isArray(data)) {
+      const hits = data.flat(3).filter(i => i && typeof i === 'object' && i.uclid);
+      if (hits.length) return hits;
+    }
+    if (typeof data === 'object') {
+      for (const val of Object.values(data)) {
+        if (Array.isArray(val)) {
+          const hits = val.flat(3).filter(i => i && typeof i === 'object' && i.uclid);
+          if (hits.length) return hits;
+        }
+      }
+      for (const val of Object.values(data)) {
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          const n = extractAds(val); if (n.length) return n;
+        }
+      }
+    }
+    return [];
+  }
+
+  // ── Render ad cards ────────────────────────────────────────────────────────
+  function renderAds(raw, extracted) {
+    const el = document.getElementById('ad-results');
+    if (!extracted.length) {
+      const empty = !raw || (typeof raw === 'object' && !Object.keys(raw).length);
+      el.innerHTML = empty
+        ? `<div class="empty"><div class="ico">📭</div><p>No ads returned</p></div>`
+        : `<div class="raw-section"><div class="raw-title">Raw Response — no uclid found</div><div class="raw-full">${esc(JSON.stringify(raw, null, 2))}</div></div>`;
+      return;
+    }
+
+    let html = `<div class="batch-row">
+      <button class="batch-btn" onclick="fireAllImpressions()">⚡ All Impressions</button>
+      <button class="batch-btn" onclick="fireAllClicks()">🖱 All Clicks</button>
+    </div>`;
+
+    extracted.forEach((ad, i) => {
+      html += `
+      <div class="ad-card">
+        <div class="ac-head">
+          <span class="ac-idx">Ad #${i + 1}</span>
+          <div class="dots">
+            <span class="dot-lbl">IMP</span><div class="dot" id="d-imp-${i}"></div>
+            <span class="dot-lbl" style="margin-left:4px">CLK</span><div class="dot" id="d-clk-${i}"></div>
+          </div>
+        </div>
+        <div class="uclid-wrap">
+          <div class="uclid-lbl">UCLID</div>
+          <div class="uclid-val" onclick="copyVal('${ad.uclid}',this)">${ad.uclid}</div>
+        </div>
+        <div class="raw-json" id="raw-${i}" onclick="this.classList.toggle('expanded')" title="Click to expand">${esc(JSON.stringify(ad, null, 2))}</div>
+        <div class="ac-actions">
+          <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+            <button class="ac-btn imp-btn" id="b-imp-${i}" onclick="fireImpression(${i})">👁 Impression</button>
+            <div class="btn-last-fired" id="imp-ts-${i}"></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+            <button class="ac-btn clk-btn" id="b-clk-${i}" onclick="fireClick(${i})">🖱 Click</button>
+            <div class="btn-last-fired" id="clk-ts-${i}"></div>
+          </div>
+        </div>
+      </div>`;
+    });
+    el.innerHTML = html;
+  }
+
+  // ── Impression ──────────────────────────────────────────────────────────────
+  async function fireImpression(i) {
+    if (!requireUbid()) return;
+    const ad = ads[i]; if (!ad) return;
+    const c   = cfg();
+    const btn = document.getElementById(`b-imp-${i}`);
+    const dot = document.getElementById(`d-imp-${i}`);
+
+    btn.disabled = true; btn.classList.add('firing');
+    dot.className = 'dot run'; btn.textContent = '⏳ Firing…';
+
+    const params = {
+      uclid:      ad.uclid,
+      client_id:  c.client_id,
+      cli_ubid:   c.cli_ubid,
+      position:   i + 1,
+      ...(c.os_name    && { os_name:    c.os_name }),
+      ...(c.os_version && { os_version: c.os_version }),
+    };
+    const lid = addLog('IMP', 'run', 't.o-s.io/events', ad.uclid, params);
+    showFlash('imp', `👁 Impression firing…`, ad.uclid);
+
+    try {
+      const r      = await fetch('/api/impression', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(params) });
+      const result = await r.json();
+      const ok     = result.success || result.status === 204;
+      updateLog(lid, ok ? 'ok' : 'err', result.status, result.url, params, result.error);
+      dot.className = 'dot ' + (ok ? 'ok' : 'err');
+      btn.textContent = ok ? '✓ Impression Sent' : '✗ Failed';
+      btn.className   = 'ac-btn imp-btn ' + (ok ? 'ok' : 'err');
+      document.getElementById(`imp-ts-${i}`).textContent = `Last fired ${new Date().toLocaleTimeString('en-GB',{hour12:false})}`;
+      showFlash(ok ? 'ok' : 'err', ok ? `✓ Impression · 204 OK` : `✗ Impression failed · ${result.status}`, ad.uclid);
+    } catch (e) {
+      updateLog(lid, 'err', 0, null, params, e.message);
+      dot.className = 'dot err'; btn.textContent = '✗ Error'; btn.className = 'ac-btn imp-btn err';
+      showFlash('err', `✗ Impression error`, ad.uclid);
+    }
+    btn.disabled = false; btn.classList.remove('firing');
+  }
+
+  // ── Click ───────────────────────────────────────────────────────────────────
+  async function fireClick(i) {
+    if (!requireUbid()) return;
+    const ad = ads[i]; if (!ad) return;
+    const c   = cfg();
+    const btn = document.getElementById(`b-clk-${i}`);
+    const dot = document.getElementById(`d-clk-${i}`);
+
+    btn.disabled = true; btn.classList.add('firing');
+    dot.className = 'dot run'; btn.textContent = '⏳ Firing…';
+
+    const params = { uclid: ad.uclid, client_id: c.client_id, cli_ubid: c.cli_ubid };
+    const lid = addLog('CLK', 'run', 't.o-s.io/aclick', ad.uclid, params);
+    showFlash('clk', `🖱 Click firing…`, ad.uclid);
+
+    try {
+      const r      = await fetch('/api/click', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(params) });
+      const result = await r.json();
+      const ok     = result.success || result.status === 204;
+      updateLog(lid, ok ? 'ok' : 'err', result.status, result.url, params, result.error);
+      dot.className = 'dot ' + (ok ? 'ok' : 'err');
+      btn.textContent = ok ? '✓ Click Sent' : '✗ Failed';
+      btn.className   = 'ac-btn clk-btn ' + (ok ? 'ok' : 'err');
+      document.getElementById(`clk-ts-${i}`).textContent = `Last fired ${new Date().toLocaleTimeString('en-GB',{hour12:false})}`;
+      showFlash(ok ? 'ok' : 'err', ok ? `✓ Click · 204 OK` : `✗ Click failed · ${result.status}`, ad.uclid);
+    } catch (e) {
+      updateLog(lid, 'err', 0, null, params, e.message);
+      dot.className = 'dot err'; btn.textContent = '✗ Error'; btn.className = 'ac-btn clk-btn err';
+      showFlash('err', `✗ Click error`, ad.uclid);
+    }
+    btn.disabled = false; btn.classList.remove('firing');
+  }
+
+  async function fireAllImpressions() { for (let i=0;i<ads.length;i++){await fireImpression(i);await delay(80);} }
+  async function fireAllClicks()      { for (let i=0;i<ads.length;i++){await fireClick(i);     await delay(80);} }
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  // ── Event Flash ─────────────────────────────────────────────────────────────
+  let flashTimer;
+  function showFlash(type, label, uclid) {
+    document.querySelectorAll('.event-flash').forEach(e => e.remove());
+    clearTimeout(flashTimer);
+    const el = document.createElement('div');
+    el.className = `event-flash ${type}`;
+    el.innerHTML = `<span>${label}</span>${uclid ? `<span class="ef-uclid">${uclid.slice(0,20)}…</span>` : ''}`;
+    document.body.appendChild(el);
+    flashTimer = setTimeout(() => {
+      el.classList.add('out');
+      setTimeout(() => el.remove(), 300);
+    }, 2000);
+  }
+
+  // ── Event Log ───────────────────────────────────────────────────────────────
+  function addLog(type, state, url, uclid, params, error) {
+    const id   = ++logId;
+    const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+    logs.unshift({ id, type, state, url, uclid, params: params || {}, time, status: null, error: error || null, expanded: true });
+    // Collapse all previous entries
+    logs.forEach((l, idx) => { if (idx > 0) l.expanded = false; });
+    renderLog();
+    return id;
+  }
+
+  function updateLog(id, state, status, url, params, error) {
+    const e = logs.find(l => l.id === id); if (!e) return;
+    e.state = state; e.status = status;
+    if (url)    e.url    = url;
+    if (params) e.params = params;
+    if (error)  e.error  = error;
+    renderLog();
+  }
+
+  function toggleLog(id) {
+    const e = logs.find(l => l.id === id); if (!e) return;
+    e.expanded = !e.expanded;
+    renderLog();
+  }
+
+  function renderLog() {
+    const el = document.getElementById('event-log');
+    if (!logs.length) {
+      el.innerHTML = `<div class="empty"><div class="ico">📋</div><p>Events will appear here</p></div>`;
+      document.getElementById('log-count').textContent = '';
+      return;
+    }
+
+    const counts = { ok: logs.filter(l=>l.state==='ok').length, err: logs.filter(l=>l.state==='err').length };
+    document.getElementById('log-count').textContent =
+      `${logs.length} events · ✓${counts.ok} ✗${counts.err}`;
+
+    el.innerHTML = logs.map(l => {
+      const icon   = l.state==='ok'?'✓':l.state==='err'?'✗':'⏳';
+      const bc     = l.type==='REQ'?'req':l.type==='IMP'?'imp':'clk';
+      const label  = l.type==='REQ'?'AD-REQ':l.type==='IMP'?'IMPRESSION':'CLICK';
+      const short  = l.uclid ? l.uclid.slice(0,22)+'…' : (l.url||'');
+
+      const paramRows = Object.entries(l.params).map(([k,v]) =>
+        `<div class="le-param-row"><span class="le-pk">${esc(k)}</span><span class="le-pv">${esc(String(v))}</span></div>`
+      ).join('');
+
+      const body = `
+        <div class="le-body ${l.expanded ? 'open' : ''}">
+          <div class="le-params">${paramRows}</div>
+          ${l.error ? `<div style="font-size:11px;color:var(--red);font-family:monospace;margin-bottom:6px">⚠ ${esc(l.error)}</div>` : ''}
+          ${l.url ? `
+            <div class="le-url-block">${esc(l.url)}</div>
+            <div class="le-url-actions">
+              <button class="le-copy-btn" onclick="copyUrl(${l.id})">Copy URL</button>
+            </div>` : ''}
+        </div>`;
+
+      return `<div class="log-entry ${l.state}" id="le-${l.id}">
+        <div class="le-head" onclick="toggleLog(${l.id})">
+          <span class="le-badge ${bc}">${label}</span>
+          <span class="le-status ${l.state}">${icon}${l.status ? ' ' + l.status : ''}</span>
+          <span class="le-short">${short}</span>
+          <span class="le-time">${l.time}</span>
+          <span class="le-chevron ${l.expanded ? 'open' : ''}">▼</span>
+        </div>
+        ${body}
+      </div>`;
+    }).join('');
+  }
+
+  function copyUrl(id) {
+    const e = logs.find(l => l.id === id);
+    if (e?.url) navigator.clipboard.writeText(e.url).then(() => toast('URL copied', 'ok'));
+  }
+
+  function clearLog() { logs = []; renderLog(); }
+
+  // ── Utilities ────────────────────────────────────────────────────────────────
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function copyVal(text, el) {
+    navigator.clipboard.writeText(text).then(() => {
+      const o = el.textContent; el.textContent = '✓ Copied!';
+      setTimeout(() => { el.textContent = o; }, 900);
+    });
+  }
+  let toastTimer;
+  function toast(msg, type) {
+    clearTimeout(toastTimer); document.querySelector('.toast')?.remove();
+    const el = document.createElement('div');
+    el.className = `toast ${type}`; el.textContent = msg;
+    document.body.appendChild(el); toastTimer = setTimeout(() => el.remove(), 3000);
+  }
+</script>
+</body>
+</html>
